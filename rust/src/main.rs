@@ -16,6 +16,9 @@ struct Args {
 
     #[clap(env = "ADVENT_SESSION_KEY")]
     advent_session_key: Option<String>,
+
+    #[clap(env = "ADVENT_YEAR")]
+    advent_year: u16
 }
 
 #[tokio::main]
