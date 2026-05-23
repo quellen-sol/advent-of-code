@@ -1,0 +1,22 @@
+type Day3Solution struct {
+	input string
+}
+
+func (s *Day3Solution) LoadInput() error {
+	v, err := os.ReadFile("./inputs/2025/3.txt")
+	if err != nil {
+		return err
+	}
+
+	s.input = string(v)
+	return nil
+}
+
+func (s *Day3Solution) RunPart1() uint {
+	return 0
+}
+
+func (s *Day3Solution) RunPart2() uint {
+	return 0
+}
+

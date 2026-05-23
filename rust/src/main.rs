@@ -16,9 +16,6 @@ struct Args {
 
     #[clap(env = "ADVENT_SESSION_KEY")]
     advent_session_key: Option<String>,
-
-    #[clap(env = "ADVENT_YEAR")]
-    advent_year: u16
 }
 
 #[tokio::main]
@@ -48,7 +45,7 @@ async fn main() {
         process::exit(0);
     }
 
-    make_and_run_solution!(9, 2025);
+    make_and_run_solution!(1, 2025);
 }
 
 pub fn sanitize_downloaded_input(input: String) -> String {
