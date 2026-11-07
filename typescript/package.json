@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "start": "tsc && node dist/index.js"
+        "start": "tsc && node dist/index.js",
+        "test": "tsc && node --test dist/timing.test.js"
     },
     "devDependencies": {
         "@types/node": "^25.9.1",

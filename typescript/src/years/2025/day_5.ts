@@ -31,9 +31,7 @@ export class Day5Solution2025 extends Solution<number, number> {
             }
         }
 
-        console.time("range merging");
         this.mergeRanges();
-        console.timeEnd("range merging");
     }
 
     part1(): number {

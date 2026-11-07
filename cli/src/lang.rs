@@ -57,8 +57,15 @@ impl Lang {
         root.join(self.dir()).join(relative)
     }
 
-    /// Builds the runner invocation. Every language takes the same three flags.
-    pub fn command(self, root: &Path, year: u16, day: u8, input: &Path) -> Command {
+    /// Builds the runner invocation. Every language takes the same flags.
+    pub fn command(
+        self,
+        root: &Path,
+        year: u16,
+        day: u8,
+        input: &Path,
+        bench_seconds: Option<f64>,
+    ) -> Command {
         let (program, args): (&str, &[&str]) = match self {
             Lang::Rust => ("cargo", &["run", "--release", "--quiet", "--"]),
             Lang::TypeScript => ("pnpm", &["--silent", "start"]),
@@ -74,6 +81,9 @@ impl Lang {
             .args(["--day", &day.to_string()])
             .arg("--input")
             .arg(input);
+        if let Some(seconds) = bench_seconds {
+            command.args(["--bench", &seconds.to_string()]);
+        }
         command
     }
 }
@@ -94,5 +104,18 @@ mod tests {
             render_template("class Day__DAY__Solution__YEAR__ {}", 2026, 5),
             "class Day5Solution2026 {}"
         );
+    }
+
+    fn has_bench_flag(bench_seconds: Option<f64>) -> bool {
+        Lang::Go
+            .command(Path::new("/"), 2025, 1, Path::new("in"), bench_seconds)
+            .get_args()
+            .any(|arg| arg == "--bench")
+    }
+
+    #[test]
+    fn only_passes_bench_when_benchmarking() {
+        assert!(has_bench_flag(Some(1.5)));
+        assert!(!has_bench_flag(None));
     }
 }
