@@ -34,6 +34,19 @@ enum Command {
         #[arg(short, long)]
         input: Option<PathBuf>,
     },
+    /// Build a solution and measure it over repeated runs
+    Bench {
+        #[command(flatten)]
+        target: Target,
+
+        /// Use this file instead of the puzzle input, e.g. a sample
+        #[arg(short, long)]
+        input: Option<PathBuf>,
+
+        /// Seconds to spend measuring setup and each part
+        #[arg(short, long, default_value_t = 1.0, value_parser = parse_seconds)]
+        time: f64,
+    },
     /// Create a solution from its template and download the input
     New {
         #[command(flatten)]
@@ -68,6 +81,13 @@ struct Target {
     day: Option<u8>,
 }
 
+fn parse_seconds(value: &str) -> Result<f64, String> {
+    match value.parse() {
+        Ok(seconds) if seconds > 0.0 && f64::is_finite(seconds) => Ok(seconds),
+        _ => Err("expected a positive number of seconds".to_string()),
+    }
+}
+
 fn main() {
     if let Err(err) = dispatch() {
         eprintln!("error: {err:#}");
@@ -80,7 +100,12 @@ fn dispatch() -> Result<()> {
     let root = find_root()?;
 
     match cli.command {
-        Command::Run { target, input } => run(&root, target, input),
+        Command::Run { target, input } => run(&root, target, input, None),
+        Command::Bench {
+            target,
+            input,
+            time,
+        } => run(&root, target, input, Some(time)),
         Command::New { target } => new(&root, target),
         Command::Session { command } => match command {
             SessionCommand::Set { token } => set_session(&root, token),
@@ -98,7 +123,12 @@ fn find_root() -> Result<PathBuf> {
         .context("not inside the advent-of-code repo")
 }
 
-fn run(root: &Path, target: Target, input_override: Option<PathBuf>) -> Result<()> {
+fn run(
+    root: &Path,
+    target: Target,
+    input_override: Option<PathBuf>,
+    bench_seconds: Option<f64>,
+) -> Result<()> {
     let lang = target.lang;
     let (year, day) = date::resolve(target.year, target.day, date::now())?;
 
@@ -124,7 +154,7 @@ fn run(root: &Path, target: Target, input_override: Option<PathBuf>) -> Result<(
     };
 
     let status = lang
-        .command(root, year, day, &input)
+        .command(root, year, day, &input, bench_seconds)
         .status()
         .with_context(|| format!("couldn't start the {} runner", lang.name()))?;
 

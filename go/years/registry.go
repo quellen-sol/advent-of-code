@@ -5,15 +5,16 @@ package years
 import (
 	"advent/adventlib"
 	"advent/years/y2025"
+	"time"
 )
 
 // Run runs one day's solution, returning false if it doesn't exist.
-func Run(year int, day int, inputPath string) bool {
+func Run(year int, day int, inputPath string, budget time.Duration) bool {
 	switch [2]int{year, day} {
 	case [2]int{2025, 1}:
-		adventlib.RunSolution(&y2025.Day1Solution{}, inputPath)
+		adventlib.RunSolution(func() *y2025.Day1Solution { return &y2025.Day1Solution{} }, inputPath, budget)
 	case [2]int{2025, 3}:
-		adventlib.RunSolution(&y2025.Day3Solution{}, inputPath)
+		adventlib.RunSolution(func() *y2025.Day3Solution { return &y2025.Day3Solution{} }, inputPath, budget)
 	default:
 		return false
 	}

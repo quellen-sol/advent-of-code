@@ -1,4 +1,3 @@
-import time
 from pathlib import Path
 
 
@@ -15,11 +14,3 @@ class Solution[T1, T2]:
 
     def part2(self) -> T2:
         raise NotImplementedError("Override in subclass.")
-
-    def time_solutions(self) -> None:
-        for name, part in (("Part 1", self.part1), ("Part 2", self.part2)):
-            start = time.perf_counter()
-            result = part()
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            print(f"{name} Solution: {result}")
-            print(f"{name}: {elapsed_ms:.3f}ms")

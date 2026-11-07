@@ -115,7 +115,8 @@ fn render_rust_solutions(days: &BTreeSet<u8>) -> String {
 }
 
 fn render_rust_years(index: &Index) -> String {
-    let mut out = format!("{RUST_HEADER}\nuse crate::defs::Solution;\n\n");
+    let mut out =
+        format!("{RUST_HEADER}\nuse std::time::Duration;\n\nuse crate::defs::Solution;\n\n");
     for year in index.keys() {
         writeln!(out, "pub mod y{year};").unwrap();
     }
@@ -123,14 +124,14 @@ fn render_rust_years(index: &Index) -> String {
     out.push_str(
         "\n/// Runs one day's solution, returning false if it doesn't exist.\n\
          #[rustfmt::skip]\n\
-         pub fn run(year: u16, day: u8, input_path: &str) -> bool {\n    \
+         pub fn run(year: u16, day: u8, input_path: &str, budget: Duration) -> bool {\n    \
              match (year, day) {\n",
     );
     for (year, days) in index {
         for day in days {
             writeln!(
                 out,
-                "        ({year}, {day}) => y{year}::solutions::day_{day}::Day{day}Solution::new(input_path).run_both_solutions(),"
+                "        ({year}, {day}) => y{year}::solutions::day_{day}::Day{day}Solution::run_both_solutions(input_path, budget),"
             )
             .unwrap();
         }
@@ -142,25 +143,27 @@ fn render_rust_years(index: &Index) -> String {
 fn render_go(index: &Index) -> String {
     let mut out = format!("{GO_HEADER}\n\npackage years\n\n");
 
-    // Go refuses to compile unused imports, so an empty registry has none.
+    // Go refuses to compile unused imports, so an empty registry only has the
+    // one that `Run`'s signature needs.
+    out.push_str("import (\n");
     if !index.is_empty() {
-        out.push_str("import (\n\t\"advent/adventlib\"\n");
+        out.push_str("\t\"advent/adventlib\"\n");
         for year in index.keys() {
             writeln!(out, "\t\"advent/years/y{year}\"").unwrap();
         }
-        out.push_str(")\n\n");
     }
+    out.push_str("\t\"time\"\n)\n\n");
 
     out.push_str(
         "// Run runs one day's solution, returning false if it doesn't exist.\n\
-         func Run(year int, day int, inputPath string) bool {\n\
+         func Run(year int, day int, inputPath string, budget time.Duration) bool {\n\
          \tswitch [2]int{year, day} {\n",
     );
     for (year, days) in index {
         for day in days {
             writeln!(
                 out,
-                "\tcase [2]int{{{year}, {day}}}:\n\t\tadventlib.RunSolution(&y{year}.Day{day}Solution{{}}, inputPath)"
+                "\tcase [2]int{{{year}, {day}}}:\n\t\tadventlib.RunSolution(func() *y{year}.Day{day}Solution {{ return &y{year}.Day{day}Solution{{}} }}, inputPath, budget)"
             )
             .unwrap();
         }
@@ -205,12 +208,14 @@ mod tests {
         let rendered = render_go(&index(&[(2025, &[1, 3])]));
         assert!(rendered.contains("\"advent/years/y2025\""));
         assert!(rendered.contains("case [2]int{2025, 3}:"));
-        assert!(rendered.contains("RunSolution(&y2025.Day3Solution{}, inputPath)"));
+        assert!(rendered.contains("return &y2025.Day3Solution{} }, inputPath, budget)"));
     }
 
     #[test]
     fn empty_go_registry_has_no_unused_imports() {
-        assert!(!render_go(&Index::new()).contains("import"));
+        let rendered = render_go(&Index::new());
+        assert!(!rendered.contains("adventlib"));
+        assert!(rendered.contains("budget time.Duration"));
     }
 
     #[test]
