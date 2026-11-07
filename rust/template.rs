@@ -1,10 +1,10 @@
 use crate::defs::Solution;
 
-pub struct Day5Solution {
+pub struct Day__DAY__Solution {
     input: String,
 }
 
-impl Solution<i64, i64> for Day5Solution {
+impl Solution<i64, i64> for Day__DAY__Solution {
     fn new(input_path: &str) -> Self {
         let input = Self::load_input(input_path);
         Self { input }
@@ -23,4 +23,4 @@ impl Solution<i64, i64> for Day5Solution {
     }
 }
 
-impl Day5Solution {}
+impl Day__DAY__Solution {}

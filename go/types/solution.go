@@ -5,7 +5,7 @@ type Number interface {
 }
 
 type Solution[D1 Number, D2 Number] interface {
-	LoadInput() error
+	LoadInput(path string) error
 	RunPart1() D1
 	RunPart2() D2
 }

@@ -1,9 +1,13 @@
-type Day3Solution struct {
+package y__YEAR__
+
+import "os"
+
+type Day__DAY__Solution struct {
 	input string
 }
 
-func (s *Day3Solution) LoadInput() error {
-	v, err := os.ReadFile("./inputs/2025/3.txt")
+func (s *Day__DAY__Solution) LoadInput(path string) error {
+	v, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -12,11 +16,10 @@ func (s *Day3Solution) LoadInput() error {
 	return nil
 }
 
-func (s *Day3Solution) RunPart1() uint {
+func (s *Day__DAY__Solution) RunPart1() uint {
 	return 0
 }
 
-func (s *Day3Solution) RunPart2() uint {
+func (s *Day__DAY__Solution) RunPart2() uint {
 	return 0
 }
-

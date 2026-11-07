@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func RunSolution[D1 types.Number, D2 types.Number](s types.Solution[D1, D2]) {
-	err := s.LoadInput()
+func RunSolution[D1 types.Number, D2 types.Number](s types.Solution[D1, D2], inputPath string) {
+	err := s.LoadInput(inputPath)
 	if err != nil {
 		panic("Unable to load input: " + err.Error())
 	}

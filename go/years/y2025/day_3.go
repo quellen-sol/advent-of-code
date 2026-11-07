@@ -10,8 +10,8 @@ type Day3Solution struct {
 	input string
 }
 
-func (s *Day3Solution) LoadInput() error {
-	v, err := os.ReadFile("./inputs/2025/3.txt")
+func (s *Day3Solution) LoadInput(path string) error {
+	v, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

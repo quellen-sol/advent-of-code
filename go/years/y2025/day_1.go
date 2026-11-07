@@ -26,8 +26,8 @@ type Day1Solution struct {
 	input string
 }
 
-func (s *Day1Solution) LoadInput() error {
-	v, err := os.ReadFile("./inputs/2025/1.txt")
+func (s *Day1Solution) LoadInput(path string) error {
+	v, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

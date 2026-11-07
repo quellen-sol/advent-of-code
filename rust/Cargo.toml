@@ -7,10 +7,11 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.5.21", features = ["derive", "env"] }
-dotenvy = "0.15.7"
+clap = { version = "4.5.21", features = ["derive"] }
 itertools = "0.13.0"
-paste = "1.0.15"
 regex = "1.10.2"
-reqwest = "0.12.9"
-tokio = { version = "1.41.1", features = ["full"] }
+
+# `aoc run` uses release builds. Keep overflow panics from debug builds so a
+# wrapped integer can't turn into a silently wrong answer.
+[profile.release]
+overflow-checks = true

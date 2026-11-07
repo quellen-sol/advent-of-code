@@ -5,8 +5,8 @@ export class Day5Solution2025 extends Solution<number, number> {
     ranges: Range[] = [];
     values: number[] = [];
 
-    constructor() {
-        super("./inputs/2025/5-input.txt");
+    constructor(inputPath: string) {
+        super(inputPath);
 
         // First ranges, then values
         let searchingValues = false;

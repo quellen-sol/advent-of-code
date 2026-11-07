@@ -1,5 +1,7 @@
 node_modules
 target
-**/*-input.txt
+inputs/
 dist
 .env
+.venv
+__pycache__
