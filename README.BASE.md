@@ -1,4 +1,4 @@
-# ❄️ Advent of Code 2025 Completion ❄️
+# ❄️ Advent of Code {{YEAR}} Completion ❄️
 
 ## Usage
 

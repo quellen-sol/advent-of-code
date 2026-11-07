@@ -1,12 +1,11 @@
 name: "Update Advent of Code README"
 
 on:
-  # schedule:
-  #  - cron: "0 0 * * *" # Every day at midnight
+  schedule:
+    - cron: "17 4 * 12 *" # Nightly in December, 23:17 on AoC's clock (UTC-5), before the next puzzle unlocks
   workflow_dispatch: # Manually run workflow
 
 env:
-  ADVENT_URL: ${{ vars.ADVENT_URL }}
   ADVENT_SESSION_KEY: ${{ secrets.ADVENT_SESSION_KEY }}
 
 jobs:
@@ -14,33 +13,37 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Setup Git Config
         run: |
           git config --global user.name quellen-sol
-          git config --global user.email quellen@step.finance
+          git config --global user.email 52678959+quellen-sol@users.noreply.github.com
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
           cache-dependency-path: "./pnpm-lock.yaml"
 
       - name: Run README Update Script
         run: |
           pnpm i
-          pnpm ts-node ./scripts/update-readme.ts
+          node ./scripts/update-readme.ts
           pnpm prettier --write README.md
 
       - name: Commit README Changes
         run: |
           git add README.md
+          if git diff --cached --quiet; then
+            echo "README.md is already up to date"
+            exit 0
+          fi
           git commit -m "ci: update README.md"
           git push

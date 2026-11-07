@@ -12,6 +12,12 @@ export class Solution<T1, T2> implements ISolution<T1, T2> {
         this.input = readFileSync(inputPath, "utf-8");
     }
 
+    *lines() {
+        for (const line of this.input.split("\n")) {
+            yield line;
+        }
+    }
+
     part1(): T1 {
         throw new Error("Method not implemented. Override in subclass.");
     }
