@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "start": "tsc && node dist/index.js"
+    },
+    "devDependencies": {
+        "@types/node": "^25.9.1",
+        "prettier": "^3.8.3",
+        "typescript": "^6.0.3"
+    }
+}
