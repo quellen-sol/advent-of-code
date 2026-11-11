@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "tsc && node dist/index.js",
-        "test": "tsc && node --test dist/timing.test.js"
+        "test": "tsc && node --test \"dist/**/*.test.js\""
     },
     "devDependencies": {
         "@types/node": "^25.9.1",
