@@ -35,6 +35,10 @@ Each language keeps its template at its root, using `__YEAR__` and `__DAY__` pla
 
 Each language's harness lives in `rust/src/timing.rs`, `go/adventlib/timing.go`, `typescript/src/timing.ts` and `py/src/py/timing.py`. Change them together, along with the test cases they share.
 
+## Utils
+
+Every language has the same utils, in `rust/src/utils`, `go/utils`, `typescript/src/utils` and `py/src/py/utils`. `.claude/skills/sync-aoc-utils/references/api-map.md` maps each util's name across the four languages. After adding or changing a util, run `/sync-aoc-utils` in Claude Code to port it to the others, or `/sync-aoc-utils check` to see what's out of sync.
+
 ## Progress
 
 |  Day  | Part One | Part Two |
