@@ -9,7 +9,9 @@ Three kinds of drift are reported:
   stale     names in the map that the code no longer has (renamed or removed utils)
   to port   map rows with an empty cell (a util some language doesn't have yet)
 
-The exit status is 1 when anything is reported, so it doubles as a check.
+Rows whose empty cells say `wip` are waiting for their reference to be finished.
+They're listed too, but don't count as drift. The exit status is 1 only when
+something is unmapped, stale or left to port, so it doubles as a check.
 
 Symbols are found with line-based rules that rely on each language's formatter
 (rustfmt, gofmt, prettier with 4-space indents, and PEP 8 for Python): members
@@ -277,6 +279,9 @@ class Row:
     def missing(self) -> list[str]:
         return [language for language in LANGUAGES if self.cells.get(language, "") == ""]
 
+    def waiting(self) -> list[str]:
+        return [language for language in LANGUAGES if self.cells.get(language, "").lower() == "wip"]
+
     def label(self) -> str:
         for language in LANGUAGES:
             if names := self.names(language):
@@ -326,7 +331,7 @@ def main(scope: list[str]) -> int:
             return 2
         modules = [m for m in modules if m in scope]
 
-    unmapped, stale, to_port = [], [], []
+    unmapped, stale, to_port, waiting = [], [], [], []
     for module in modules:
         rows = api_map.get(module, [])
         for language in LANGUAGES:
@@ -335,9 +340,11 @@ def main(scope: list[str]) -> int:
             unmapped += [f"{module}  {language}  {n}" for n in in_code if n not in in_map]
             stale += [f"{module}  {language}  {n}" for n in in_map if n not in in_code]
         for row in rows:
+            note = f"  [{row.notes}]" if row.notes else ""
             if missing := row.missing():
-                note = f"  [{row.notes}]" if row.notes else ""
                 to_port.append(f"{module}  {row.label()}  ->  {', '.join(missing)}{note}")
+            if languages := row.waiting():
+                waiting.append(f"{module}  {row.label()}  ->  {', '.join(languages)}{note}")
 
     present = {
         module: [language for language in LANGUAGES if language in code.get(module, {})]
@@ -351,6 +358,7 @@ def main(scope: list[str]) -> int:
         ("Unmapped: in the code, not in the map", unmapped),
         ("Stale: in the map, not in the code", stale),
         ("To port: rows with an empty cell", to_port),
+        ("Waiting: rows marked wip, not counted as drift", waiting),
     ):
         print(f"\n{title} ({len(items)})")
         for item in items:

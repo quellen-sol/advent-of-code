@@ -13,6 +13,7 @@ A cell holds one of these values:
 | `—` | Deliberately absent. The Notes say why, usually because the language covers it another way. |
 | `native: …` | The language or its standard library already does it, so the utils don't wrap it. |
 | *(empty)* | Not ported yet. The inventory lists it under "To port". |
+| `wip` | The reference is unfinished, so the port waits. The inventory lists it under "Waiting" without counting it as drift. Clear the marker once the reference is finished. |
 
 The Notes column records behaviour that deliberately differs between languages, so that a later sync doesn't "fix" it back.
 
@@ -136,7 +137,7 @@ The Notes column records behaviour that deliberately differs between languages, 
 
 | Rust | Go | TypeScript | Python | Notes |
 | --- | --- | --- | --- | --- |
-|  |  | `chunks` |  | Pieces of n items, the last one shorter |
+| native: `<[T]>::chunks` | native: `slices.Chunk` | `chunks` | `chunks` | Pieces of n items, the last one shorter. Every language rejects n < 1 when called: Rust and Go panic, TS throws a `RangeError` (for fractions too) and Python raises `ValueError`. Rust and Go yield subslices that share the input's memory, while TS yields copied arrays. Python re-exports `itertools.batched` as `chunks`, which takes any iterable and yields tuples |
 
 ## `graph`
 
@@ -144,13 +145,13 @@ Work in progress in TypeScript: `connected` has no body yet. Port the graph once
 
 | Rust | Go | TypeScript | Python | Notes |
 | --- | --- | --- | --- | --- |
-|  |  | `UndirectedGraph` |  | WIP |
-|  |  | `UndirectedGraph.nodes` |  | WIP |
-|  |  | `UndirectedGraph.edges` |  | WIP |
-|  |  | `UndirectedGraph.addNode` |  | WIP. Returns the new node's index |
-|  |  | `UndirectedGraph.getNode` |  | WIP |
-|  |  | `UndirectedGraph.getEdgeKey` |  | WIP |
-|  |  | `UndirectedGraph.indiciesFromKey` |  | WIP |
-|  |  | `UndirectedGraph.insertEdge` |  | WIP. False if the edge already existed |
-|  |  | `UndirectedGraph.hasEdge` |  | WIP |
-|  |  | `UndirectedGraph.connected` |  | WIP: no body yet |
+| wip | wip | `UndirectedGraph` | wip | |
+| wip | wip | `UndirectedGraph.nodes` | wip | |
+| wip | wip | `UndirectedGraph.edges` | wip | |
+| wip | wip | `UndirectedGraph.addNode` | wip | Returns the new node's index |
+| wip | wip | `UndirectedGraph.getNode` | wip | |
+| wip | wip | `UndirectedGraph.getEdgeKey` | wip | Sorts the two indices as strings, so `(9, 10)` gives `"10-9"`. Keys still match in either order |
+| wip | wip | `UndirectedGraph.indiciesFromKey` | wip | |
+| wip | wip | `UndirectedGraph.insertEdge` | wip | False if the edge already existed |
+| wip | wip | `UndirectedGraph.hasEdge` | wip | |
+| wip | wip | `UndirectedGraph.connected` | wip | No body yet |
