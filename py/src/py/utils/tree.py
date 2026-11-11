@@ -1,3 +1,4 @@
+from collections import deque
 from collections.abc import Iterator
 
 
@@ -30,4 +31,12 @@ class Tree[T]:
         while stack:
             node = stack.pop()
             stack.extend(node.children)
+            yield node
+
+    def bfs_iter(self) -> Iterator[TreeNode[T]]:
+        """Visits the nodes level by level. Siblings come out first to last."""
+        queue = deque([self.root])
+        while queue:
+            node = queue.popleft()
+            queue.extend(node.children)
             yield node

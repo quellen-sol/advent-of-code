@@ -29,4 +29,16 @@ export class Tree<T> {
             yield node;
         }
     }
+
+    /** Visits the nodes level by level. Siblings come out first to last. */
+    *bfsIter(): Generator<TreeNode<T>> {
+        const queue = [this.root];
+        for (let i = 0; i < queue.length; i++) {
+            const node = queue[i]!;
+            for (const child of node.children) {
+                queue.push(child);
+            }
+            yield node;
+        }
+    }
 }

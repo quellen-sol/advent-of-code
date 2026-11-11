@@ -81,7 +81,7 @@ func expectChunks(t *testing.T, s string, size int, expected []string) {
 	}
 }
 
-func TestTreeDFSIter(t *testing.T) {
+func TestTreeDFSAndBFSIter(t *testing.T) {
 	root := NewTreeNode("/")
 	a := root.InsertChild("a")
 	root.InsertChild("b")
@@ -93,7 +93,14 @@ func TestTreeDFSIter(t *testing.T) {
 		order = append(order, node.Value)
 	}
 	if expected := []string{"/", "b", "a", "c"}; !slices.Equal(order, expected) {
-		t.Errorf("got %v, want %v", order, expected)
+		t.Errorf("DFS got %v, want %v", order, expected)
+	}
+	order = nil
+	for node := range tree.BFSIter() {
+		order = append(order, node.Value)
+	}
+	if expected := []string{"/", "a", "b", "c"}; !slices.Equal(order, expected) {
+		t.Errorf("BFS got %v, want %v", order, expected)
 	}
 	if c.Parent != a || a.Parent != root {
 		t.Error("children should point at their parents")
