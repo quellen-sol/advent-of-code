@@ -1,4 +1,5 @@
 mod date;
+mod defaults;
 mod input;
 mod lang;
 mod registry;
@@ -13,6 +14,7 @@ use std::{
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
 
+use defaults::{Defaults, Puzzle};
 use input::Input;
 use lang::Lang;
 
@@ -26,6 +28,9 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Build and run a solution
+    ///
+    /// Without -y or -d, runs the puzzle last created with `aoc new`, and
+    /// whichever puzzle this runs becomes the default for `aoc bench`.
     Run {
         #[command(flatten)]
         target: Target,
@@ -35,6 +40,9 @@ enum Command {
         input: Option<PathBuf>,
     },
     /// Build a solution and measure it over repeated runs
+    ///
+    /// Without -y or -d, benchmarks the puzzle last created with `aoc new` or
+    /// run with `aoc run`.
     Bench {
         #[command(flatten)]
         target: Target,
@@ -48,6 +56,8 @@ enum Command {
         time: f64,
     },
     /// Create a solution from its template and download the input
+    ///
+    /// The puzzle becomes the default for `aoc run` and `aoc bench`.
     New {
         #[command(flatten)]
         target: Target,
@@ -72,11 +82,13 @@ struct Target {
     #[arg(value_enum, default_value_t = Lang::Rust)]
     lang: Lang,
 
-    /// Defaults to the current year on AoC's clock (UTC-5)
+    /// Defaults to the current year on AoC's clock (UTC-5), unless `run` or
+    /// `bench` remembers one
     #[arg(short, long)]
     year: Option<u16>,
 
-    /// Defaults to the current day of the month on AoC's clock (UTC-5)
+    /// Defaults to the current day of the month on AoC's clock (UTC-5), unless
+    /// `run` or `bench` remembers one
     #[arg(short, long)]
     day: Option<u8>,
 }
@@ -130,7 +142,12 @@ fn run(
     bench_seconds: Option<f64>,
 ) -> Result<()> {
     let lang = target.lang;
-    let (year, day) = date::resolve(target.year, target.day, date::now())?;
+    let mut defaults = Defaults::load(root);
+    let saved = match bench_seconds {
+        Some(_) => defaults.bench,
+        None => defaults.run,
+    };
+    let (year, day) = resolve(&target, saved)?;
 
     registry::sync(root, lang)?;
 
@@ -153,6 +170,11 @@ fn run(
         },
     };
 
+    if bench_seconds.is_none() {
+        defaults.bench = Some((year, day));
+        defaults.save(root);
+    }
+
     let status = lang
         .command(root, year, day, &input, bench_seconds)
         .status()
@@ -163,7 +185,8 @@ fn run(
 
 fn new(root: &Path, target: Target) -> Result<()> {
     let lang = target.lang;
-    let (year, day) = date::resolve(target.year, target.day, date::now())?;
+    // Always today by default: `aoc new` is what moves on to the next puzzle.
+    let (year, day) = resolve(&target, None)?;
 
     let path = lang.solution_path(root, year, day);
     if path.exists() {
@@ -175,6 +198,12 @@ fn new(root: &Path, target: Target) -> Result<()> {
 
     registry::sync(root, lang)?;
 
+    Defaults {
+        run: Some((year, day)),
+        bench: Some((year, day)),
+    }
+    .save(root);
+
     // The solution is in place by now, so a failure here is safe to fix and
     // retry: `aoc new` won't touch the existing file.
     match input::ensure(root, year, day)? {
@@ -185,6 +214,16 @@ fn new(root: &Path, target: Target) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Fills in whatever -y and -d leave out, saying so when a remembered puzzle
+/// was used, since it may be from weeks ago.
+fn resolve(target: &Target, saved: Option<Puzzle>) -> Result<Puzzle> {
+    let (year, day) = date::resolve(target.year, target.day, saved, date::now())?;
+    if saved.is_some() && (target.year.is_none() || target.day.is_none()) {
+        eprintln!("Using {year} day {day}; pass -y and -d for another");
+    }
+    Ok((year, day))
 }
 
 fn scaffold(root: &Path, lang: Lang, year: u16, day: u8, path: &Path) -> Result<()> {
