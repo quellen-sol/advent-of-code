@@ -2,3 +2,4 @@
 #![allow(unused)]
 
 pub mod day_7;
+pub mod day_8;
