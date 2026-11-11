@@ -17,9 +17,9 @@ aoc run [lang] [-y YEAR] [-d DAY] [-i FILE]              # build and run it, opt
 aoc bench [lang] [-y YEAR] [-d DAY] [-i FILE] [-t SECS]  # measure it over repeated runs
 ```
 
-`lang` is `rust` (default), `ts`, `go` or `py`. The year and day default to today on AoC's clock (UTC-5), so they roll over the moment a puzzle unlocks. `run` and `bench` remember the last puzzle instead: `aoc new` sets the default for both, and `aoc run` sets it for `bench`. So after `aoc new -y 2022 -d 8`, a plain `aoc run` or `aoc bench` uses 2022 day 8, and `-d 9` alone means 2022 day 9.
+`lang` is `rust` (default), `ts`, `go` or `py`. The year and day default to today on AoC's clock (UTC-5), so they roll over the moment a puzzle unlocks. `run` and `bench` remember the last solution instead, language included: `aoc new` sets the default for both, and `aoc run` sets it for `bench`. So after `aoc new py -y 2022 -d 8`, a plain `aoc run` or `aoc bench` uses the Python solution for 2022 day 8, and `-d 9` alone means Python 2022 day 9.
 
-Inputs are stored in `inputs/{year}/{day}.txt`, the session token in `.env` and the remembered puzzles in `.aoc-defaults`. All three are gitignored. On a fresh clone, run `pnpm i` in `typescript/` first.
+Inputs are stored in `inputs/{year}/{day}.txt`, the session token in `.env` and the remembered solutions in `.aoc-defaults`. All three are gitignored. On a fresh clone, run `pnpm i` in `typescript/` first.
 
 Each language keeps its template at its root, using `__YEAR__` and `__DAY__` placeholders. `rust/src/years/**/mod.rs` and `go/years/registry.go` are generated, so don't edit them by hand.
 

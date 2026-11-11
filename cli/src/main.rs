@@ -14,7 +14,7 @@ use std::{
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
 
-use defaults::{Defaults, Puzzle};
+use defaults::{Defaults, Solution};
 use input::Input;
 use lang::Lang;
 
@@ -29,8 +29,9 @@ struct Cli {
 enum Command {
     /// Build and run a solution
     ///
-    /// Without -y or -d, runs the puzzle last created with `aoc new`, and
-    /// whichever puzzle this runs becomes the default for `aoc bench`.
+    /// Without a language, -y or -d, runs the solution last created with
+    /// `aoc new`, and whichever solution this runs becomes the default for
+    /// `aoc bench`.
     Run {
         #[command(flatten)]
         target: Target,
@@ -41,8 +42,8 @@ enum Command {
     },
     /// Build a solution and measure it over repeated runs
     ///
-    /// Without -y or -d, benchmarks the puzzle last created with `aoc new` or
-    /// run with `aoc run`.
+    /// Without a language, -y or -d, benchmarks the solution last created
+    /// with `aoc new` or run with `aoc run`.
     Bench {
         #[command(flatten)]
         target: Target,
@@ -57,7 +58,7 @@ enum Command {
     },
     /// Create a solution from its template and download the input
     ///
-    /// The puzzle becomes the default for `aoc run` and `aoc bench`.
+    /// The solution becomes the default for `aoc run` and `aoc bench`.
     New {
         #[command(flatten)]
         target: Target,
@@ -79,8 +80,9 @@ enum SessionCommand {
 
 #[derive(Args)]
 struct Target {
-    #[arg(value_enum, default_value_t = Lang::Rust)]
-    lang: Lang,
+    /// Defaults to rust, unless `run` or `bench` remembers one
+    #[arg(value_enum)]
+    lang: Option<Lang>,
 
     /// Defaults to the current year on AoC's clock (UTC-5), unless `run` or
     /// `bench` remembers one
@@ -141,13 +143,13 @@ fn run(
     input_override: Option<PathBuf>,
     bench_seconds: Option<f64>,
 ) -> Result<()> {
-    let lang = target.lang;
     let mut defaults = Defaults::load(root);
     let saved = match bench_seconds {
         Some(_) => defaults.bench,
         None => defaults.run,
     };
-    let (year, day) = resolve(&target, saved)?;
+    let solution = resolve(&target, saved)?;
+    let Solution { lang, year, day } = solution;
 
     registry::sync(root, lang)?;
 
@@ -171,7 +173,7 @@ fn run(
     };
 
     if bench_seconds.is_none() {
-        defaults.bench = Some((year, day));
+        defaults.bench = Some(solution);
         defaults.save(root);
     }
 
@@ -184,9 +186,10 @@ fn run(
 }
 
 fn new(root: &Path, target: Target) -> Result<()> {
-    let lang = target.lang;
-    // Always today by default: `aoc new` is what moves on to the next puzzle.
-    let (year, day) = resolve(&target, None)?;
+    // Always rust and today by default: `aoc new` is what moves on to the
+    // next puzzle.
+    let solution = resolve(&target, None)?;
+    let Solution { lang, year, day } = solution;
 
     let path = lang.solution_path(root, year, day);
     if path.exists() {
@@ -199,8 +202,8 @@ fn new(root: &Path, target: Target) -> Result<()> {
     registry::sync(root, lang)?;
 
     Defaults {
-        run: Some((year, day)),
-        bench: Some((year, day)),
+        run: Some(solution),
+        bench: Some(solution),
     }
     .save(root);
 
@@ -216,14 +219,25 @@ fn new(root: &Path, target: Target) -> Result<()> {
     Ok(())
 }
 
-/// Fills in whatever -y and -d leave out, saying so when a remembered puzzle
-/// was used, since it may be from weeks ago.
-fn resolve(target: &Target, saved: Option<Puzzle>) -> Result<Puzzle> {
-    let (year, day) = date::resolve(target.year, target.day, saved, date::now())?;
-    if saved.is_some() && (target.year.is_none() || target.day.is_none()) {
-        eprintln!("Using {year} day {day}; pass -y and -d for another");
+/// Fills in whatever the arguments leave out, saying so when a remembered
+/// solution was used, since it may be from weeks ago.
+fn resolve(target: &Target, saved: Option<Solution>) -> Result<Solution> {
+    let lang = target
+        .lang
+        .or(saved.map(|saved| saved.lang))
+        .unwrap_or(Lang::Rust);
+    let saved_puzzle = saved.map(|saved| (saved.year, saved.day));
+    let (year, day) = date::resolve(target.year, target.day, saved_puzzle, date::now())?;
+
+    let omitted = target.lang.is_none() || target.year.is_none() || target.day.is_none();
+    if saved.is_some() && omitted {
+        eprintln!(
+            "Using {} {year} day {day}; pass a language, -y or -d to change it",
+            lang.name()
+        );
     }
-    Ok((year, day))
+
+    Ok(Solution { lang, year, day })
 }
 
 fn scaffold(root: &Path, lang: Lang, year: u16, day: u8, path: &Path) -> Result<()> {

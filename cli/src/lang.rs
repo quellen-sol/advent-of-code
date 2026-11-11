@@ -5,7 +5,7 @@ use std::{
 
 use clap::ValueEnum;
 
-#[derive(Clone, Copy, ValueEnum)]
+#[derive(Clone, Copy, Debug, PartialEq, ValueEnum)]
 pub enum Lang {
     #[value(name = "rust", alias = "rs")]
     Rust,
