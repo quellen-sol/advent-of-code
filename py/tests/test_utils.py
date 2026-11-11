@@ -53,7 +53,7 @@ class StringsTests(unittest.TestCase):
 
 
 class TreeTests(unittest.TestCase):
-    def test_dfs_iter(self) -> None:
+    def test_dfs_and_bfs_iter(self) -> None:
         root = TreeNode("/")
         a = root.insert_child("a")
         root.insert_child("b")
@@ -61,6 +61,7 @@ class TreeTests(unittest.TestCase):
         tree = Tree(root)
 
         self.assertEqual([n.value for n in tree.dfs_iter()], ["/", "b", "a", "c"])
+        self.assertEqual([n.value for n in tree.bfs_iter()], ["/", "a", "b", "c"])
         self.assertIs(c.parent, a)
         self.assertIs(a.parent, root)
 

@@ -41,3 +41,17 @@ func (t *Tree[T]) DFSIter() iter.Seq[*TreeNode[T]] {
 		}
 	}
 }
+
+// BFSIter visits the nodes level by level. Siblings come out first to last.
+func (t *Tree[T]) BFSIter() iter.Seq[*TreeNode[T]] {
+	return func(yield func(*TreeNode[T]) bool) {
+		queue := []*TreeNode[T]{t.Root}
+		for i := 0; i < len(queue); i++ {
+			node := queue[i]
+			queue = append(queue, node.Children...)
+			if !yield(node) {
+				return
+			}
+		}
+	}
+}

@@ -62,7 +62,8 @@ The Notes column records behaviour that deliberately differs between languages, 
 | `Tree.root` | `Tree.Root` | `Tree.root` | `Tree.root` | |
 | `Tree::new_from_root`, `Tree::new_from_ref` | `NewTree` | `Tree.constructor` | `Tree.__init__` | Rust needs one for an owned node and one for a `NodeRef`. With shared references, one constructor covers both. All of them clear the root's parent |
 | `Tree::dfs_iter` | `Tree.DFSIter` | `Tree.dfsIter` | `Tree.dfs_iter` | Pre-order from a stack, so siblings come out last to first |
-| `TreeDFSIter` | — | — | — | Rust iterator type. The others return a generator or `iter.Seq` |
+| `Tree::bfs_iter` | `Tree.BFSIter` | `Tree.bfsIter` | `Tree.bfs_iter` | Level by level, siblings first to last |
+| `TreeDFSIter`, `TreeBFSIter` | — | — | — | Rust iterator types. The others return a generator or `iter.Seq` |
 | `TreeNode` | `TreeNode` | `TreeNode` | `TreeNode` | |
 | `TreeNode.value` | `TreeNode.Value` | `TreeNode.value` | `TreeNode.value` | |
 | `TreeNode.children` | `TreeNode.Children` | `TreeNode.children` | `TreeNode.children` | |

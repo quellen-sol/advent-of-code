@@ -70,7 +70,7 @@ test("empty string has no chunks", () => {
     assert.deepEqual([...stringChunks("", 2)], []);
 });
 
-test("tree dfs iter", () => {
+test("tree dfs and bfs iter", () => {
     const root = new TreeNode("/");
     const a = root.insertChild("a");
     root.insertChild("b");
@@ -80,6 +80,10 @@ test("tree dfs iter", () => {
     assert.deepEqual(
         Array.from(tree.dfsIter(), (n) => n.value),
         ["/", "b", "a", "c"],
+    );
+    assert.deepEqual(
+        Array.from(tree.bfsIter(), (n) => n.value),
+        ["/", "a", "b", "c"],
     );
     assert.equal(c.parent, a);
     assert.equal(a.parent, root);
