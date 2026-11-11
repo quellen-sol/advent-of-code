@@ -1,4 +1,8 @@
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::{HashSet, VecDeque},
+    rc::Rc,
+};
 
 pub struct Tree<T> {
     pub root: NodeRef<T>,
@@ -23,6 +27,15 @@ impl<T> Tree<T> {
             visited: HashSet::new(),
         }
     }
+
+    pub fn bfs_iter(&self) -> TreeBFSIter<T> {
+        let mut vq = VecDeque::new();
+        vq.push_back(self.root.clone());
+        TreeBFSIter {
+            queue: vq,
+            visited: HashSet::new(),
+        }
+    }
 }
 
 pub struct TreeDFSIter<T> {
@@ -37,6 +50,24 @@ impl<T> Iterator for TreeDFSIter<T> {
         let node = self.stack.pop()?;
         for child in node.borrow().children.iter() {
             self.stack.push(child.clone());
+        }
+
+        Some(node)
+    }
+}
+
+pub struct TreeBFSIter<T> {
+    queue: VecDeque<NodeRef<T>>,
+    visited: HashSet<NodeRef<T>>,
+}
+
+impl<T> Iterator for TreeBFSIter<T> {
+    type Item = NodeRef<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.queue.pop_front()?;
+        for child in node.borrow().children.iter() {
+            self.queue.push_back(child.clone());
         }
 
         Some(node)
