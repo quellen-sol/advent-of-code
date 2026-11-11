@@ -4,6 +4,7 @@ use std::time::Duration;
 use crate::defs::Solution;
 
 pub mod y2015;
+pub mod y2022;
 pub mod y2024;
 pub mod y2025;
 
@@ -15,6 +16,7 @@ pub fn run(year: u16, day: u8, input_path: &str, budget: Duration) -> bool {
         (2015, 2) => y2015::solutions::day_2::Day2Solution::run_both_solutions(input_path, budget),
         (2015, 3) => y2015::solutions::day_3::Day3Solution::run_both_solutions(input_path, budget),
         (2015, 5) => y2015::solutions::day_5::Day5Solution::run_both_solutions(input_path, budget),
+        (2022, 7) => y2022::solutions::day_7::Day7Solution::run_both_solutions(input_path, budget),
         (2024, 1) => y2024::solutions::day_1::Day1Solution::run_both_solutions(input_path, budget),
         (2024, 2) => y2024::solutions::day_2::Day2Solution::run_both_solutions(input_path, budget),
         (2024, 3) => y2024::solutions::day_3::Day3Solution::run_both_solutions(input_path, budget),

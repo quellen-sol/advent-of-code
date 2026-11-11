@@ -72,11 +72,7 @@ impl Day5Solution {
     }
 
     pub fn get_merged_ranges(&self) -> HashSet<QRange> {
-        let mut ranges_copy = self
-            .ranges
-            .iter()
-            .map(|r| r.clone())
-            .collect::<HashSet<_>>();
+        let mut ranges_copy = self.ranges.iter().cloned().collect::<HashSet<_>>();
 
         loop {
             let mut to_remove = Vec::new();
@@ -138,10 +134,10 @@ impl QRange {
             return None;
         }
 
-        return Some(Self {
+        Some(Self {
             lower: self.lower.min(other.lower),
             upper: self.upper.max(other.upper),
-        });
+        })
     }
 
     pub fn size(&self) -> i64 {

@@ -22,7 +22,7 @@ impl Solution<i64, i64> for Day7Solution {
     }
 
     fn get_part_1_solution(&self) -> i64 {
-        let mut total_splits= 0;
+        let mut total_splits = 0;
         for item in self.grid.scan() {
             match *item.value.borrow() {
                 'S' => {
@@ -32,8 +32,7 @@ impl Solution<i64, i64> for Day7Solution {
                     *south.value.borrow_mut() = '|';
                 }
                 '|' => {
-                    let south = item
-                        .get_node_in_direction(&self.grid, &GridDirection::South);
+                    let south = item.get_node_in_direction(&self.grid, &GridDirection::South);
 
                     let Some(s) = south else {
                         continue;

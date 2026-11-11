@@ -33,7 +33,7 @@ impl Stats {
 
         let runs = samples.len();
         let middle = runs / 2;
-        let median = if runs % 2 == 0 {
+        let median = if runs.is_multiple_of(2) {
             (samples[middle - 1] + samples[middle]) / 2.0
         } else {
             samples[middle]

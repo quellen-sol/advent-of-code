@@ -62,7 +62,7 @@ impl Day2Solution {
             let w = caps[2].parse().unwrap();
             let h = caps[3].parse().unwrap();
 
-            return Some(Prism { l, w, h });
+            Some(Prism { l, w, h })
         })
     }
 }

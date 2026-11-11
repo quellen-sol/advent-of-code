@@ -20,15 +20,11 @@ impl Solution<usize, usize> for Day5Solution {
     }
 
     fn get_part_1_solution(&self) -> usize {
-        self.get_lines()
-            .filter(|l| Self::string_good_p1(*l))
-            .count()
+        self.get_lines().filter(|l| Self::string_good_p1(l)).count()
     }
 
     fn get_part_2_solution(&self) -> usize {
-        self.get_lines()
-            .filter(|l| Self::string_good_p2(*l))
-            .count()
+        self.get_lines().filter(|l| Self::string_good_p2(l)).count()
     }
 }
 

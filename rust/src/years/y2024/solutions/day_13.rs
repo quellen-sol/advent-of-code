@@ -38,7 +38,7 @@ impl Day13Solution {
         let mut games: Vec<Game> = Vec::new();
         let mut cur_game = Game::default();
         for (i, line) in game_s_iter {
-            let info = if line.trim().len() > 0 {
+            let info = if !line.trim().is_empty() {
                 let caps = button_regex.captures(line).unwrap();
                 let num_x = caps.get(1).unwrap().as_str().parse::<Unit>().unwrap();
                 let num_y = caps.get(2).unwrap().as_str().parse::<Unit>().unwrap();

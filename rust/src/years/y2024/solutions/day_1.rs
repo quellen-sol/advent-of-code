@@ -22,7 +22,7 @@ impl Solution<i32, i32> for Day1Solution {
         let (left_list, right_list, _) = self.get_lists();
 
         let mut total_distance = 0;
-        for (left_num, right_num) in left_list.into_iter().zip(right_list.into_iter()) {
+        for (left_num, right_num) in left_list.into_iter().zip(right_list) {
             let distance = (left_num - right_num).abs();
             total_distance += distance;
         }
