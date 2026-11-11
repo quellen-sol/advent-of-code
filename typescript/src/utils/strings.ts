@@ -1,13 +1,20 @@
 /**
  * Splits `s` into pieces of `chunkSize` characters. The last piece is shorter
  * when `chunkSize` doesn't divide `s` evenly. Characters are code points, so a
- * surrogate pair is never split.
+ * surrogate pair is never split. Throws straight away, rather than on the
+ * first `next()`, when `chunkSize` isn't a positive integer.
  */
-export function* stringChunks(s: string, chunkSize: number): Generator<string> {
-    if (!(chunkSize >= 1)) {
-        throw new RangeError(`chunkSize must be positive, got ${chunkSize}`);
+export function stringChunks(s: string, chunkSize: number): Generator<string> {
+    if (!Number.isInteger(chunkSize) || chunkSize < 1) {
+        throw new RangeError(
+            `chunkSize must be a positive integer, got ${chunkSize}`,
+        );
     }
 
+    return codePointChunks(s, chunkSize);
+}
+
+function* codePointChunks(s: string, chunkSize: number): Generator<string> {
     let start = 0;
     let end = 0;
     let count = 0;

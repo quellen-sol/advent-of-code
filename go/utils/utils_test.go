@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"iter"
 	"slices"
 	"strings"
 	"testing"
@@ -74,6 +75,15 @@ func TestEmptyStringHasNoChunks(t *testing.T) {
 	expectChunks(t, "", 2, nil)
 }
 
+func TestStringChunksRejectASizeBelow1(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Error("StringChunks(\"abc\", 0) should panic")
+		}
+	}()
+	StringChunks("abc", 0)
+}
+
 func expectChunks(t *testing.T, s string, size int, expected []string) {
 	t.Helper()
 	if got := slices.Collect(StringChunks(s, size)); !slices.Equal(got, expected) {
@@ -81,28 +91,50 @@ func expectChunks(t *testing.T, s string, size int, expected []string) {
 	}
 }
 
-func TestTreeDFSAndBFSIter(t *testing.T) {
+// makeTree builds / with children a and b, where a has c and b has d.
+func makeTree() *Tree[string] {
 	root := NewTreeNode("/")
-	a := root.InsertChild("a")
-	root.InsertChild("b")
-	c := a.InsertChild("c")
-	tree := NewTree(root)
+	root.InsertChild("a").InsertChild("c")
+	root.InsertChild("b").InsertChild("d")
+	return NewTree(root)
+}
 
-	var order []string
-	for node := range tree.DFSIter() {
-		order = append(order, node.Value)
+// treeValues collects up to limit values, stopping the iterator early.
+func treeValues(nodes iter.Seq[*TreeNode[string]], limit int) []string {
+	var values []string
+	for node := range nodes {
+		if len(values) == limit {
+			break
+		}
+		values = append(values, node.Value)
 	}
-	if expected := []string{"/", "b", "a", "c"}; !slices.Equal(order, expected) {
-		t.Errorf("DFS got %v, want %v", order, expected)
+	return values
+}
+
+func TestTreeDFSIter(t *testing.T) {
+	tree := makeTree()
+	if got, want := treeValues(tree.DFSIter(), -1), []string{"/", "b", "d", "a", "c"}; !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
-	order = nil
-	for node := range tree.BFSIter() {
-		order = append(order, node.Value)
+	if got, want := treeValues(tree.DFSIter(), 2), []string{"/", "b"}; !slices.Equal(got, want) {
+		t.Errorf("stopping early: got %v, want %v", got, want)
 	}
-	if expected := []string{"/", "a", "b", "c"}; !slices.Equal(order, expected) {
-		t.Errorf("BFS got %v, want %v", order, expected)
+}
+
+func TestTreeBFSIter(t *testing.T) {
+	tree := makeTree()
+	if got, want := treeValues(tree.BFSIter(), -1), []string{"/", "a", "b", "c", "d"}; !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
-	if c.Parent != a || a.Parent != root {
+	if got, want := treeValues(tree.BFSIter(), 2), []string{"/", "a"}; !slices.Equal(got, want) {
+		t.Errorf("stopping early: got %v, want %v", got, want)
+	}
+}
+
+func TestChildrenPointAtTheirParents(t *testing.T) {
+	root := makeTree().Root
+	a := root.Children[0]
+	if a.Parent != root || a.Children[0].Parent != a {
 		t.Error("children should point at their parents")
 	}
 }

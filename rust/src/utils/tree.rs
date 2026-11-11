@@ -112,20 +112,38 @@ impl<T> NodeRefable<T> for NodeRef<T> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_dfs_and_bfs_iter() {
+    /// `/` has children `a` and `b`; `a` has `c`, and `b` has `d`.
+    fn make_tree() -> Tree<&'static str> {
         let tree = Tree::new_from_root(TreeNode::new("/"));
-        let a = tree.root.insert_child("a");
-        tree.root.insert_child("b");
-        a.insert_child("c");
+        tree.root.insert_child("a").insert_child("c");
+        tree.root.insert_child("b").insert_child("d");
+        tree
+    }
 
-        let dfs: Vec<_> = tree.dfs_iter().map(|n| n.borrow().value).collect();
-        assert_eq!(dfs, ["/", "b", "a", "c"]);
-        let bfs: Vec<_> = tree.bfs_iter().map(|n| n.borrow().value).collect();
-        assert_eq!(bfs, ["/", "a", "b", "c"]);
+    fn values(nodes: impl Iterator<Item = NodeRef<&'static str>>) -> Vec<&'static str> {
+        nodes.map(|node| node.borrow().value).collect()
+    }
 
+    #[test]
+    fn test_dfs_iter() {
+        let tree = make_tree();
+        assert_eq!(values(tree.dfs_iter()), ["/", "b", "d", "a", "c"]);
+        assert_eq!(values(tree.dfs_iter().take(2)), ["/", "b"]);
+    }
+
+    #[test]
+    fn test_bfs_iter() {
+        let tree = make_tree();
+        assert_eq!(values(tree.bfs_iter()), ["/", "a", "b", "c", "d"]);
+        assert_eq!(values(tree.bfs_iter().take(2)), ["/", "a"]);
+    }
+
+    #[test]
+    fn test_children_point_at_their_parents() {
+        let tree = make_tree();
+        let a = tree.root.borrow().children[0].clone();
         let c = a.borrow().children[0].clone();
-        assert!(Rc::ptr_eq(c.borrow().parent.as_ref().unwrap(), &a));
         assert!(Rc::ptr_eq(a.borrow().parent.as_ref().unwrap(), &tree.root));
+        assert!(Rc::ptr_eq(c.borrow().parent.as_ref().unwrap(), &a));
     }
 }
