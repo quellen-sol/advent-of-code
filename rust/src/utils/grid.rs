@@ -1,6 +1,9 @@
 #![allow(unused)]
 
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    hash::{Hash, Hasher},
+};
 
 pub enum GridCreationItem<T> {
     Item(T),
@@ -60,14 +63,16 @@ impl<T> Grid<T> {
         }
     }
 
-    pub fn traverse_row(&self, y: isize) -> GridNodeDirectionIterator<T> {
-        let node = self.get_node(0, y).unwrap();
-        node.direction_iter(self, GridDirection::East)
+    /// Row `y`, west to east. Panics if the row doesn't exist.
+    pub fn traverse_row(&self, y: isize) -> GridSlopeIterator<T> {
+        let node = self.get_node(0, y).expect("row is outside the grid");
+        node.iter_node_by_slope(self, (0, 1))
     }
 
-    pub fn traverse_column(&self, x: isize) -> GridNodeDirectionIterator<T> {
-        let node = self.get_node(x, 0).unwrap();
-        node.direction_iter(self, GridDirection::South)
+    /// Column `x`, north to south. Panics if the column doesn't exist.
+    pub fn traverse_column(&self, x: isize) -> GridSlopeIterator<T> {
+        let node = self.get_node(x, 0).expect("column is outside the grid");
+        node.iter_node_by_slope(self, (1, 0))
     }
 
     pub fn iter_rows(&self) -> GridRowIterator<T> {
@@ -179,7 +184,8 @@ impl<'a, T> DoubleEndedIterator for GridRowIterator<'a, T> {
     }
 }
 
-#[derive(Debug, Hash)]
+/// Two nodes are equal when they have the same position, whatever their values.
+#[derive(Debug)]
 pub struct GridNode<T> {
     pub value: T,
     pub x: isize,
@@ -203,6 +209,14 @@ impl<T: PartialEq> PartialEq for GridNode<T> {
 }
 
 impl<T: Eq> Eq for GridNode<T> {}
+
+// Hashes only what `eq` compares, so equal nodes always hash the same.
+impl<T> Hash for GridNode<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.x.hash(state);
+        self.y.hash(state);
+    }
+}
 
 impl<T> GridNode<T> {
     pub fn add_direction(&self, direction: &GridDirection) -> (isize, isize) {
@@ -238,19 +252,22 @@ impl<T> GridNode<T> {
         }
     }
 
+    /// The diagonal neighbors that exist, clockwise from north-east.
     pub fn diagonal_walk<'a>(
         &'a self,
         grid: &'a Grid<T>,
     ) -> impl Iterator<Item = (GridDirection, &'a GridNode<T>)> {
-        self.neighbors(grid).enumerate().filter_map(
-            |(idx, n)| {
-                if idx % 2 == 1 {
-                    Some(n)
-                } else {
-                    None
-                }
-            },
-        )
+        [
+            GridDirection::NorthEast,
+            GridDirection::SouthEast,
+            GridDirection::SouthWest,
+            GridDirection::NorthWest,
+        ]
+        .into_iter()
+        .filter_map(move |direction| {
+            let node = self.get_node_in_direction(grid, &direction)?;
+            Some((direction, node))
+        })
     }
 
     /// First node of this iteration is NOT the originating node this iterator was created from,
@@ -656,5 +673,32 @@ MXMXAXMASX";
 
         let next_node = iter.next();
         assert!(next_node.is_none());
+    }
+
+    #[test]
+    fn test_diagonal_walk_on_an_edge() {
+        let grid = make_grid();
+        let walk: Vec<_> = grid
+            .get_node(9, 1)
+            .unwrap()
+            .diagonal_walk(&grid)
+            .map(|(direction, node)| (direction, node.value))
+            .collect();
+        assert_eq!(
+            walk,
+            [
+                (GridDirection::SouthWest, 'M'),
+                (GridDirection::NorthWest, 'S')
+            ]
+        );
+    }
+
+    #[test]
+    fn test_traverse_row_and_column_include_the_first_node() {
+        let grid = make_grid();
+        let row: String = grid.traverse_row(0).map(|node| node.value).collect();
+        assert_eq!(row, "MMMSXXMASM");
+        let column: String = grid.traverse_column(0).map(|node| node.value).collect();
+        assert_eq!(column, "MMAMXXSSMM");
     }
 }
