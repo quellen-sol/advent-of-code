@@ -32,6 +32,8 @@ It prints three lists and exits 0 only when all of them are empty:
 - **Stale:** names in the map that the code no longer has, meaning renamed or deleted utils.
 - **To port:** map rows with an empty cell, meaning a util that some language doesn't have yet. Each row's Notes are shown alongside.
 
+It also prints a fourth list, **Waiting**: rows marked `wip` because their reference is unfinished. These don't affect the exit status, but check each one on every sync. Once the reference is finished, clear its `wip` cells, which turns them into "to port".
+
 The script finds public symbols with line-based rules that rely on each language's formatter. If a result looks off, such as a member that's missing or a private helper that's listed, check the source and fix the rule in the script rather than working around it. A wrong inventory makes every later sync wrong too.
 
 In `check` mode, stop here and summarize by module.
@@ -42,7 +44,7 @@ Read the source of every unmapped symbol and decide what it is:
 
 - **A new public util:** add a row to its module's table. Fill in that language's cell and leave the other cells empty, so that they show up as "to port". If the module is new, add a `` ## `module` `` section for it.
 - **A rename:** a stale name in the same language and module that does the same job means the util was renamed. Update the cell. If the new name is better, ask the user whether the other languages should follow, since a rename also touches the solutions that call it.
-- **Plumbing:** something that exists only because of the language, such as a Rust iterator struct, trait glue or an ownership wrapper. Add a row with `—` in the other cells and say why in Notes.
+- **Plumbing:** something that exists only because of the language, such as a Rust iterator struct, trait glue or an ownership wrapper. If the module already has a row for that kind of plumbing, add the name to it. Otherwise add a row with `—` in the other cells and say why in Notes.
 
 A stale name with no matching rename means the util was deleted from that language. Don't delete it from the others on your own, because solutions in those languages may still use it. Ask the user.
 
@@ -50,8 +52,12 @@ A stale name with no matching rename means the util was deleted from that langua
 
 Read the util in every language that already has it, then pick one of these for each empty cell:
 
-- **The source is unfinished.** It has `todo!()`, empty bodies, `throw new Error("Not implemented")` or a WIP note. Skip it and say so in the report. Porting an API that's still moving multiplies the churn.
-- **The target's standard library already does it.** Don't reimplement it. If it can be re-exported as it is (Python `from math import gcd`, Rust `pub use`, TypeScript `export { … } from`), re-export it from the matching utils module, so the import path looks the same in every language. If it's a method or a generic that can't be re-exported (Rust's `<[T]>::chunks`, Go's `slices.Chunk`), write `native: …` in the cell instead of wrapping it.
+- **The source is unfinished.** It has `todo!()`, empty bodies, `throw new Error("Not implemented")` or a WIP note. Write `wip` in its empty cells and put a line under the module heading saying what's unfinished, then mention it in the report. Porting an API that's still moving multiplies the churn.
+- **The target's standard library already does it.** Don't reimplement it.
+  - If it's a function that can be re-exported without a wrapper (Python's `from math import gcd`, Rust's `pub use`, TypeScript's `export { … } from`), re-export it from the matching utils module, so the import path looks the same in every language.
+  - Re-export it under the util's name even when the standard library calls it something else, for example `from itertools import batched as chunks`.
+  - Smaller differences, such as yielding tuples instead of lists, are fine. Record them in Notes.
+  - If it's a method or a generic that can't be re-exported (Rust's `<[T]>::chunks`, Go's `slices.Chunk`), write `native: …` in the cell instead of wrapping it.
 - **The target already has a better implementation**, one that is faster or more general, or that solutions already use. Keep it, map it, and note any difference in behaviour.
 - **Anything else:** port it, following conventions.md. Port the behaviour and the shape of the API rather than the syntax. A Rust iterator struct becomes a generator or an `iter.Seq`, and constructors that exist only for ownership collapse into one.
 
@@ -59,22 +65,27 @@ When several languages already have a util, treat the clearest and best-tested v
 
 ## 4. Port behaviour, not bugs
 
-Reading code closely enough to port it is when its bugs show up. The first sync found four in the Rust utils:
+Reading code closely enough to port it is when its bugs show up. The first syncs found several this way:
 
-- `diagonal_walk` returned orthogonal neighbours on edges.
-- `traverse_row` skipped its first node.
+- Rust's `diagonal_walk` returned orthogonal neighbours on edges.
+- Rust's `traverse_row` skipped its first node.
 - A rectangle area was wrong in one orientation.
 - `GridNode`'s hash disagreed with its equality.
+- TypeScript's `chunks` looped forever when given a size of 0.
 
 When the reference does something that looks unintended:
 
-1. Prove it by running the reference on that case, with a temporary test that you remove afterwards.
-2. Port the intended behaviour, and add a test in the target that pins it down.
-3. Report it, and ask before changing the reference, because existing solutions may depend on the current behaviour. If the user agrees, fix it there with the same test, and rerun any solution that uses the util to see whether its answer changes.
+1. Prove it by running the reference on that case, with a temporary test that you remove afterwards. In TypeScript, also delete its compiled copy in `dist/`, or `pnpm test` keeps running it.
+2. Port the intended behaviour, and add a test in the target that pins it down. If every target turned out `native:`, there's no port to pin it in, so the reference is the only place a fix can go.
+3. Report it, and ask before changing the reference, because existing solutions may depend on the current behaviour. If the user agrees, fix it there with the same test. Then rerun every solution that uses the util, before and after the fix, to see whether its answer changes. conventions.md says how to run a solution from a worktree.
 
 ## 5. Port the tests
 
-Every port gets its reference's tests, case for case, with the same fixtures and the same expected values. That way all four languages are checked against one set of expectations. The grid modules share a 10×10 fixture, which is in conventions.md. Add cases for the edges you had to think about: bounds, negative numbers, empty input, multi-byte characters and stopping an iterator early. If you add a case that the reference lacks and it passes there, add it to the reference too.
+Every port gets its reference's tests, case for case, with the same fixtures and the same expected values. That way all four languages are checked against one set of expectations. The grid and tree tests have shared fixtures, which are in conventions.md. Reuse a fixture where it fits, and add a new one there when a module needs its own.
+
+Add cases for the edges you had to think about: bounds, negative numbers, empty input, multi-byte characters, invalid arguments and stopping an iterator early.
+
+The goal is that every language ends up with the same cases. So if the reference has no tests for the util, write them there as well. If you add a case that the reference lacks, add it there too, provided it passes.
 
 ## 6. Update the map
 
@@ -84,7 +95,7 @@ Every port gets its reference's tests, case for case, with the same fixtures and
 
 ## 7. Verify
 
-Run every language's checks, using the commands in conventions.md, not only the languages you touched, because a shared fixture or a map change can affect all of them. Then rerun the inventory. It should exit 0, or list only the rows you deliberately skipped.
+Run every language's checks, using the commands in conventions.md, not only the languages you touched, because a shared fixture or a map change can affect all of them. Then rerun the inventory. It should exit 0, and anything you skipped should appear under Waiting.
 
 ## 8. Report
 
@@ -94,7 +105,7 @@ Tell the user:
 - Where a native or existing implementation was kept instead, and why.
 - Differences in behaviour that you recorded in the map.
 - Bugs you found, how you confirmed each one, and whether the reference was changed.
-- What you skipped (WIP utils, deletions waiting for a decision) and the inventory's final output.
+- What you skipped (rows marked `wip`, deletions waiting for a decision) and the inventory's final output.
 
 ## Large syncs
 
